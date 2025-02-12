@@ -9,7 +9,11 @@ from PIL import Image
 import pandas as pd
 import asyncio
 
-app = Flask(__name__)
+from flask import Flask, render_template
+
+app = Flask(__name__, template_folder='.')  # <-- Tells Flask to look in the root directory
+
+
 
 # ✅ Telegram API Credentials (Replace with yours)
 API_ID = 27889863
@@ -80,7 +84,6 @@ def extract_text_from_pdf(pdf_path):
 
 @app.route("/")
 def index():
-    """Serve the main HTML page."""
     return render_template("index.html")
 
 @app.route("/download", methods=["GET"])

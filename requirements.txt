@@ -9,3 +9,6 @@ openpyxl
 gunicorn
 pytesseract
 telethon
+fastapi
+uvicorn
+gunicorn

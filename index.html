@@ -4,46 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newspaper PDF Extraction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Newspaper PDF Extraction</h1>
-    <label for="cityInput">Enter city name (e.g., Pune, Lucknow): </label>
-    <input type="text" id="cityInput">
-    <button onclick="fetchLatestPDF()">Fetch Latest PDF</button>
-    <div id="pdfLink"></div>
-    <button onclick="extractText()">Extract Text</button>
-    <div id="extractedText"></div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
+        <h1 class="text-2xl font-bold text-center mb-4 text-gray-800">📜 Newspaper PDF Extractor</h1>
+        
+        <div class="flex items-center space-x-3 mb-4">
+            <input type="text" id="cityInput" placeholder="Enter city name (e.g., Pune)" 
+                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <button onclick="fetchLatestPDF()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                Fetch PDF
+            </button>
+        </div>
+
+        <div id="loading" class="hidden text-center text-blue-500 font-semibold">Loading...</div>
+        <div id="pdfLink" class="text-center text-blue-600 mt-2"></div>
+        
+        <div class="mt-4 text-center">
+            <button onclick="extractText()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                Extract Text
+            </button>
+        </div>
+
+        <div id="extractedText" class="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner hidden"></div>
+    </div>
 
     <script>
-        // Function to fetch latest PDF based on city input
         async function fetchLatestPDF() {
             const city = document.getElementById('cityInput').value.trim();
-            const response = await fetch(`http://localhost:5000/fetch_latest_pdf/${city}`);
+            if (!city) return alert("Please enter a city name.");
+            
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('pdfLink').innerHTML = "";
+
+            const response = await fetch(`https://deven-exij.onrender.com/fetch_latest_pdf/${city}`);
+            document.getElementById('loading').classList.add('hidden');
+
             if (response.ok) {
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
-                document.getElementById('pdfLink').innerHTML = `<a href="${url}" download="${city}_latest.pdf">Download Latest PDF</a>`;
+                document.getElementById('pdfLink').innerHTML = `
+                    <a href="${url}" download="${city}_latest.pdf" class="text-blue-600 underline">⬇️ Download Latest PDF</a>
+                `;
             } else {
                 alert('No PDF found for the selected city.');
             }
         }
 
-        // Function to extract text from the fetched PDF
         async function extractText() {
             const city = document.getElementById('cityInput').value.trim();
-            const response = await fetch(`http://localhost:5000/extract_text/${city}_latest.pdf`);
+            if (!city) return alert("Please enter a city name.");
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('extractedText').classList.add('hidden');
+
+            const response = await fetch(`https://deven-exij.onrender.com/extract_text/${city}_latest.pdf`);
+            document.getElementById('loading').classList.add('hidden');
+
             if (response.ok) {
                 const data = await response.json();
                 const extractedTextContainer = document.getElementById('extractedText');
-                extractedTextContainer.innerHTML = '<h2>Extracted Text</h2>';
+                extractedTextContainer.innerHTML = '<h2 class="text-lg font-semibold">Extracted Text</h2>';
+                extractedTextContainer.classList.remove('hidden');
+
                 data.forEach(item => {
                     extractedTextContainer.innerHTML += `
-                        <div>
-                            <p><strong>Page No.: </strong>${item['Page No.']}</p>
-                            <p><strong>Keyword: </strong>${item['Keyword']}</p>
-                            <p><strong>Extracted Text: </strong>${item['Extracted Text']}</p>
+                        <div class="p-2 border-b">
+                            <p><strong>📄 Page No.:</strong> ${item['Page No.']}</p>
+                            <p><strong>🔍 Keyword:</strong> ${item['Keyword']}</p>
+                            <p><strong>📝 Extracted Text:</strong> ${item['Extracted Text']}</p>
                         </div>
-                        <hr>
                     `;
                 });
             } else {

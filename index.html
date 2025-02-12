@@ -1,61 +1,55 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newspaper Extractor</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        textarea {
-            width: 100%;
-            height: 300px;
-            padding: 10px;
-            font-size: 14px;
-        }
-    </style>
+    <title>Newspaper PDF Extraction</title>
 </head>
 <body>
-    <h1>Newspaper Extractor</h1>
-    <form id="cityForm">
-        <label for="city">Enter City Name:</label>
-        <input type="text" id="city" name="city" required>
-        <button type="submit">Extract Text</button>
-    </form>
-    <div id="results">
-        <!-- Results will be displayed here -->
-    </div>
+    <h1>Newspaper PDF Extraction</h1>
+    <label for="cityInput">Enter city name (e.g., Pune, Lucknow): </label>
+    <input type="text" id="cityInput">
+    <button onclick="fetchLatestPDF()">Fetch Latest PDF</button>
+    <div id="pdfLink"></div>
+    <button onclick="extractText()">Extract Text</button>
+    <div id="extractedText"></div>
 
     <script>
-        document.getElementById('cityForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            fetch(`/download?city=${document.getElementById('city').value}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        document.getElementById('results').innerHTML = `<p>Error: ${data.error}</p>`;
-                    } else {
-                        let output = '<h2>Extraction Results</h2><ul>';
-                        data.data.forEach(result => {
-                            output += `<li><strong>Page No:</strong> ${result['Page No.']}<br>`;
-                            output += `<strong>Keyword:</strong> ${result['Keyword']}<br>`;
-                            output += `<strong>Extracted Text:</strong><br>${result['Extracted Text']}</li><hr>`;
-                        });
-                        output += '</ul>';
-                        document.getElementById('results').innerHTML = output;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('results').innerHTML = '<p>Error fetching data. Please try again later.</p>';
+        // Function to fetch latest PDF based on city input
+        async function fetchLatestPDF() {
+            const city = document.getElementById('cityInput').value.trim();
+            const response = await fetch(`http://localhost:5000/fetch_latest_pdf/${city}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                document.getElementById('pdfLink').innerHTML = `<a href="${url}" download="${city}_latest.pdf">Download Latest PDF</a>`;
+            } else {
+                alert('No PDF found for the selected city.');
+            }
+        }
+
+        // Function to extract text from the fetched PDF
+        async function extractText() {
+            const city = document.getElementById('cityInput').value.trim();
+            const response = await fetch(`http://localhost:5000/extract_text/${city}_latest.pdf`);
+            if (response.ok) {
+                const data = await response.json();
+                const extractedTextContainer = document.getElementById('extractedText');
+                extractedTextContainer.innerHTML = '<h2>Extracted Text</h2>';
+                data.forEach(item => {
+                    extractedTextContainer.innerHTML += `
+                        <div>
+                            <p><strong>Page No.: </strong>${item['Page No.']}</p>
+                            <p><strong>Keyword: </strong>${item['Keyword']}</p>
+                            <p><strong>Extracted Text: </strong>${item['Extracted Text']}</p>
+                        </div>
+                        <hr>
+                    `;
                 });
-        });
+            } else {
+                alert('Failed to extract text from the PDF.');
+            }
+        }
     </script>
 </body>
 </html>

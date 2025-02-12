@@ -1,57 +1,61 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newspaper PDF Extractor</title>
+    <title>Newspaper Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Newspaper PDF Extractor</h2>
-    <form id="extractForm">
-        <label for="cityInput">Enter City:</label>
-        <input type="text" id="cityInput" name="city">
-        <button type="submit">Extract Newspaper</button>
+    <h1>Newspaper Extractor</h1>
+    <form id="cityForm">
+        <label for="city">Enter City Name:</label>
+        <input type="text" id="city" name="city" required>
+        <button type="submit">Extract Text</button>
     </form>
-
-    <div id="output"></div>
+    <div id="results">
+        <!-- Results will be displayed here -->
+    </div>
 
     <script>
-        document.getElementById('extractForm').addEventListener('submit', async function(event) {
+        document.getElementById('cityForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const city = document.getElementById('cityInput').value.trim();
-            if (!city) {
-                alert('Please enter a city name.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/download?city=${encodeURIComponent(city)}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-                displayResults(data);
-            } catch (error) {
-                console.error('Error:', error);
-                displayResults({ error: 'Failed to fetch data. Please try again later.' });
-            }
-        });
-
-        function displayResults(data) {
-            const outputDiv = document.getElementById('output');
-            if (data.error) {
-                outputDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-            } else {
-                const excelLink = `<a href="${data.excel_file}" download>Download Excel</a>`;
-                let resultsHtml = `<p>Extraction completed. ${excelLink}</p>`;
-                resultsHtml += '<h3>Extracted Data:</h3><ul>';
-                data.data.forEach(entry => {
-                    resultsHtml += `<li>Page ${entry['Page No.']}: ${entry['Extracted Text']}</li>`;
+            fetch(`/download?city=${document.getElementById('city').value}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('results').innerHTML = `<p>Error: ${data.error}</p>`;
+                    } else {
+                        let output = '<h2>Extraction Results</h2><ul>';
+                        data.data.forEach(result => {
+                            output += `<li><strong>Page No:</strong> ${result['Page No.']}<br>`;
+                            output += `<strong>Keyword:</strong> ${result['Keyword']}<br>`;
+                            output += `<strong>Extracted Text:</strong><br>${result['Extracted Text']}</li><hr>`;
+                        });
+                        output += '</ul>';
+                        document.getElementById('results').innerHTML = output;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('results').innerHTML = '<p>Error fetching data. Please try again later.</p>';
                 });
-                resultsHtml += '</ul>';
-                outputDiv.innerHTML = resultsHtml;
-            }
-        }
+        });
     </script>
 </body>
 </html>

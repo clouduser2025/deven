@@ -1,5 +1,6 @@
+# app.py
 from flask import Flask, request, jsonify, render_template
-from telethon import TelegramClient, events
+from telethon import TelegramClient
 import os
 import datetime
 import re
@@ -9,11 +10,7 @@ from PIL import Image
 import pandas as pd
 import asyncio
 
-from flask import Flask, render_template
-
-app = Flask(__name__, template_folder='.')  # <-- Tells Flask to look in the root directory
-
-
+app = Flask(__name__, template_folder='.')
 
 # ✅ Telegram API Credentials (Replace with yours)
 API_ID = 27889863
@@ -28,9 +25,12 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 # ✅ Initialize Telegram Client
 client = TelegramClient(SESSION_FILE, API_ID, API_HASH)
 
+async def start_client():
+    await client.start()
+
 async def download_newspaper_edition(city):
     """Fetch and download the newspaper PDF from Telegram."""
-    await client.start()
+    await start_client()
     today = datetime.datetime.today().strftime("%d-%m-%Y")
     file_pattern = rf"TOI_{city}_{today}\.pdf"
     latest_pdf_path = None
@@ -104,4 +104,6 @@ def download_and_extract():
     return jsonify(extraction_result)
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(start_client())
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

@@ -7,3 +7,4 @@ pandas
 nltk
 openpyxl
 gunicorn
+pytesseract

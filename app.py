@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from telethon import TelegramClient, events
 import os
 import datetime
@@ -78,6 +78,11 @@ def extract_text_from_pdf(pdf_path):
 
     return {"message": "Extraction completed", "excel_file": output_excel, "data": matched_results}
 
+@app.route("/")
+def index():
+    """Serve the main HTML page."""
+    return render_template("index.html")
+
 @app.route("/download", methods=["GET"])
 def download_and_extract():
     """API Endpoint to download and extract text from a newspaper."""
@@ -96,4 +101,4 @@ def download_and_extract():
     return jsonify(extraction_result)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

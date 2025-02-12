@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newspaper PDF Extractor</title>
+</head>
+<body>
+    <h2>Newspaper PDF Extractor</h2>
+    <form id="extractForm">
+        <label for="cityInput">Enter City:</label>
+        <input type="text" id="cityInput" name="city">
+        <button type="submit">Extract Newspaper</button>
+    </form>
+
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('extractForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const city = document.getElementById('cityInput').value.trim();
+            if (!city) {
+                alert('Please enter a city name.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/download?city=${encodeURIComponent(city)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                displayResults({ error: 'Failed to fetch data. Please try again later.' });
+            }
+        });
+
+        function displayResults(data) {
+            const outputDiv = document.getElementById('output');
+            if (data.error) {
+                outputDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+                const excelLink = `<a href="${data.excel_file}" download>Download Excel</a>`;
+                let resultsHtml = `<p>Extraction completed. ${excelLink}</p>`;
+                resultsHtml += '<h3>Extracted Data:</h3><ul>';
+                data.data.forEach(entry => {
+                    resultsHtml += `<li>Page ${entry['Page No.']}: ${entry['Extracted Text']}</li>`;
+                });
+                resultsHtml += '</ul>';
+                outputDiv.innerHTML = resultsHtml;
+            }
+        }
+    </script>
+</body>
+</html>

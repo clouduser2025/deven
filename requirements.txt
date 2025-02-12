@@ -1,0 +1,8 @@
+flask
+python-telegram-bot
+telethon
+requests
+pdfplumber
+pandas
+nltk
+openpyxl
